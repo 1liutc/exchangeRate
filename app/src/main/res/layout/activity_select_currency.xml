@@ -65,6 +65,7 @@
         android:layout_marginBottom="8dp"
         android:baselineAligned="false"
         android:orientation="horizontal"
+        android:showDividers="beginning|middle|end"
         android:weightSum="3"
         app:layout_constraintBottom_toTopOf="@+id/linearLayout2"
         app:layout_constraintEnd_toEndOf="parent"
@@ -72,37 +73,133 @@
         app:layout_constraintTop_toBottomOf="@+id/linearLayout">
 
         <ScrollView
-            android:id="@+id/ScrollView"
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_marginEnd="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_weight="1"
-            android:visibility="visible"
-            app:layout_constraintBottom_toTopOf="@+id/selectAndCallAPI"
-            app:layout_constraintTop_toBottomOf="@id/textView">
+            android:layout_weight="1">
 
             <RadioGroup
                 android:id="@+id/baseCurrency"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:layout_editor_absoluteX="63dp"
-                tools:layout_editor_absoluteY="19dp">
+                android:layout_height="wrap_content">
 
                 <RadioButton
-                    android:id="@+id/base_CHY"
+                    android:id="@+id/base_AUD"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_AUD" />
+
+                <RadioButton
+                    android:id="@+id/base_BGN"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_BGN" />
+
+                <RadioButton
+                    android:id="@+id/base_BRL"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_BRL" />
+
+                <RadioButton
+                    android:id="@+id/base_CAD"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_CAD" />
+
+                <RadioButton
+                    android:id="@+id/base_CHF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_CHF" />
+
+                <RadioButton
+                    android:id="@+id/base_CNY"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/currency_CNY" />
 
                 <RadioButton
-                    android:id="@+id/base_USD"
+                    android:id="@+id/base_CZK"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/currency_USD"
-                    android:visibility="visible" />
+                    android:text="@string/currency_CZK" />
+
+                <RadioButton
+                    android:id="@+id/base_DKK"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_DKK" />
+
+                <RadioButton
+                    android:id="@+id/base_EUR"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_EUR" />
+
+                <RadioButton
+                    android:id="@+id/base_GBP"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_GBP" />
+
+                <RadioButton
+                    android:id="@+id/base_HKD"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_HKD" />
+
+                <RadioButton
+                    android:id="@+id/base_HRK"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_HRK" />
+
+                <RadioButton
+                    android:id="@+id/base_HUF"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_HUF" />
+
+                <RadioButton
+                    android:id="@+id/base_IDR"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_IDR" />
+
+                <RadioButton
+                    android:id="@+id/base_ILS"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_ILS" />
+
+                <RadioButton
+                    android:id="@+id/base_INR"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_INR" />
+
+                <RadioButton
+                    android:id="@+id/base_ISK"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_ISK" />
 
                 <RadioButton
                     android:id="@+id/base_JPY"
@@ -112,11 +209,110 @@
                     android:text="@string/currency_JPY" />
 
                 <RadioButton
-                    android:id="@+id/baseEUR"
+                    android:id="@+id/base_KRW"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/currency_EUR" />
+                    android:text="@string/currency_KRW" />
+
+                <RadioButton
+                    android:id="@+id/base_MXN"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_MXN" />
+
+                <RadioButton
+                    android:id="@+id/base_MYR"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_MYR" />
+
+                <RadioButton
+                    android:id="@+id/base_NOK"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_NOK" />
+
+                <RadioButton
+                    android:id="@+id/base_NZD"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_NZD" />
+
+                <RadioButton
+                    android:id="@+id/base_PHP"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_PHP" />
+
+                <RadioButton
+                    android:id="@+id/base_PLN"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_PLN" />
+
+                <RadioButton
+                    android:id="@+id/base_RON"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_RON" />
+
+                <RadioButton
+                    android:id="@+id/base_RUB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_RUB" />
+
+                <RadioButton
+                    android:id="@+id/base_SEK"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_SEK" />
+
+                <RadioButton
+                    android:id="@+id/base_SGD"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_SGD" />
+
+                <RadioButton
+                    android:id="@+id/base_THB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_THB" />
+
+                <RadioButton
+                    android:id="@+id/base_TRY"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_TRY" />
+
+                <RadioButton
+                    android:id="@+id/base_USD"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_USD" />
+
+                <RadioButton
+                    android:id="@+id/base_ZAR"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_ZAR" />
+
 
             </RadioGroup>
         </ScrollView>
@@ -134,18 +330,123 @@
                 android:visibility="visible">
 
                 <CheckBox
-                    android:id="@+id/CHY"
+                    android:id="@+id/AUD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_AUD" />
+
+                <CheckBox
+                    android:id="@+id/BGN"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_BGN" />
+
+                <CheckBox
+                    android:id="@+id/BRL"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_BRL" />
+
+                <CheckBox
+                    android:id="@+id/CAD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_CAD" />
+
+                <CheckBox
+                    android:id="@+id/CHF"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_CHF" />
+
+                <CheckBox
+                    android:id="@+id/CNY"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/currency_CNY" />
 
                 <CheckBox
-                    android:id="@+id/USD"
+                    android:id="@+id/CZK"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/currency_USD" />
+                    android:text="@string/currency_CZK" />
+
+                <CheckBox
+                    android:id="@+id/DKK"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_DKK" />
+
+                <CheckBox
+                    android:id="@+id/EUR"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_EUR" />
+
+                <CheckBox
+                    android:id="@+id/GBP"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_GBP" />
+
+                <CheckBox
+                    android:id="@+id/HKD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_HKD" />
+
+                <CheckBox
+                    android:id="@+id/HRK"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_HRK" />
+
+                <CheckBox
+                    android:id="@+id/HUF"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_HUF" />
+
+                <CheckBox
+                    android:id="@+id/IDR"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_IDR" />
+
+                <CheckBox
+                    android:id="@+id/ILS"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_ILS" />
+
+                <CheckBox
+                    android:id="@+id/INR"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_INR" />
+
+                <CheckBox
+                    android:id="@+id/ISK"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_ISK" />
 
                 <CheckBox
                     android:id="@+id/JPY"
@@ -155,51 +456,171 @@
                     android:text="@string/currency_JPY" />
 
                 <CheckBox
-                    android:id="@+id/EUR"
+                    android:id="@+id/KRW"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="@string/currency_EUR" />
+                    android:text="@string/currency_KRW" />
+
+                <CheckBox
+                    android:id="@+id/MXN"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_MXN" />
+
+                <CheckBox
+                    android:id="@+id/MYR"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_MYR" />
+
+                <CheckBox
+                    android:id="@+id/NOK"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_NOK" />
+
+                <CheckBox
+                    android:id="@+id/NZD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_NZD" />
+
+                <CheckBox
+                    android:id="@+id/PHP"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_PHP" />
+
+                <CheckBox
+                    android:id="@+id/PLN"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_PLN" />
+
+                <CheckBox
+                    android:id="@+id/RON"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_RON" />
+
+                <CheckBox
+                    android:id="@+id/RUB"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_RUB" />
+
+                <CheckBox
+                    android:id="@+id/SEK"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_SEK" />
+
+                <CheckBox
+                    android:id="@+id/SGD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_SGD" />
+
+                <CheckBox
+                    android:id="@+id/THB"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_THB" />
+
+                <CheckBox
+                    android:id="@+id/TRY"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_TRY" />
+
+                <CheckBox
+                    android:id="@+id/USD"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_USD" />
+
+                <CheckBox
+                    android:id="@+id/ZAR"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/currency_ZAR" />
+
             </LinearLayout>
         </ScrollView>
 
         <ScrollView
             android:layout_width="0dp"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:visibility="visible">
+            android:layout_weight="1">
 
             <RadioGroup
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
                 <RadioButton
-                    android:id="@+id/lastMonth"
+                    android:id="@+id/last_01_month"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="RadioButton" />
+                    android:text="@string/last_01_month" />
 
                 <RadioButton
-                    android:id="@+id/lastSeason"
+                    android:id="@+id/last_03_month"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="RadioButton" />
+                    android:text="@string/last_03_month" />
 
                 <RadioButton
-                    android:id="@+id/lastHalfYear"
+                    android:id="@+id/last_06_month"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="RadioButton" />
+                    android:text="@string/last_06_month" />
 
                 <RadioButton
-                    android:id="@+id/lastYear"
+                    android:id="@+id/last_12_month"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="RadioButton" />
+                    android:text="@string/last_12_month" />
+
+                <RadioButton
+                    android:id="@+id/last_36_month"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/last_36_month" />
+
+                <RadioButton
+                    android:id="@+id/last_60_month"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/last_60_month" />
+
+                <RadioButton
+                    android:id="@+id/max_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/max_duration" />
+
             </RadioGroup>
         </ScrollView>
 
