@@ -1,5 +1,6 @@
 package com.example.liuti.exchangerateproject;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -22,6 +23,13 @@ public final class SelectCurrency extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_select_currency);
 
+        Bundle selection = getIntent().getExtras();
+
+        ((RadioButton) findViewById(selection.getInt(MainActivity.BaseCurrency))).setChecked(true);
+        for (int id : selection.getIntegerArrayList(MainActivity.CurrencyToCheck)) {
+            ((CheckBox) findViewById(id)).setChecked(true);
+        }
+
         Button cancelSelection = findViewById(R.id.cancelSelection);
         cancelSelection.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -30,7 +38,7 @@ public final class SelectCurrency extends AppCompatActivity {
             }
         });
 
-        final Button selectAndCallAPI = findViewById(R.id.selectAndCallAPI);
+        Button selectAndCallAPI = findViewById(R.id.selectAndCallAPI);
         selectAndCallAPI.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
@@ -50,10 +58,10 @@ public final class SelectCurrency extends AppCompatActivity {
                     }
                 }
 
+                Intent t = getIntent();
 
-                Toast.makeText(SelectCurrency.this,
-                        null,
-                        Toast.LENGTH_LONG).show();
+                setResult(1, t);
+                finish();
             }
         });
     }
