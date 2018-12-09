@@ -203,19 +203,19 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
     public void onResponse(final JSONObject response) {
 
         Log.d(TAG, response.toString());
-//        try {
-//            JSONObject rates = response.getJSONObject("rates");
-//            String[] datesArr;
-//            {
-//                Iterator<String> itr = rates.keys();
-//                ArrayList<String> datesAL = new ArrayList<String>();
-//                while (itr.hasNext()) {
-//                    datesAL.add(itr.next());
-//                }
-//                datesArr = datesAL.toArray(new String[0]);
-//            }
-//            Arrays.sort(datesArr);
-//
+        try {
+            JSONObject rates = response.getJSONObject("rates");
+            String[] datesArr;
+            {
+                Iterator<String> itr = rates.keys();
+                ArrayList<String> datesAL = new ArrayList<String>();
+                while (itr.hasNext()) {
+                    datesAL.add(itr.next());
+                }
+                datesArr = datesAL.toArray(new String[0]);
+            }
+            Arrays.sort(datesArr);
+
 //            StringBuffer sb = new StringBuffer();
 //            for (int i = 0; i < datesArr.length; i++) {
 //
@@ -229,9 +229,9 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
 //                }
 //            }
 //            Log.d(TAG, sb.toString());
-//        } catch (Exception e) {
+        } catch (Exception e) {
 //            Log.wtf(TAG, e.getMessage());
-//        }
+        }
 
         LineGraphSeries<DataPoint> series2 = new LineGraphSeries<>(new DataPoint[]{
                 new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
@@ -298,6 +298,9 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         }
         if (sb.charAt(sb.length() - 1) == ',') {
             sb.deleteCharAt(sb.length() - 1);
+        } else {
+            //noinspection CheckStyle
+            sb.delete(sb.length() - 9, sb.length());
         }
         try {
             JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
