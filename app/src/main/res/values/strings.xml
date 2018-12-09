@@ -1,9 +1,9 @@
 <resources>
     <string name="app_name">ExchangeRateProject</string>
-    <string name="start_select_currency">Select Currency</string>
+    <string name="select_currency">Select Currency</string>
 
-    <string name="select_and_call_api">Select</string>
-    <string name="cancel_selection">Cancel</string>
+    <string name="select">Select</string>
+    <string name="cancel">Cancel</string>
 
     <string name="base_currency">Base Currency</string>
     <string name="currency_to_check">Currency to Check</string>
@@ -16,6 +16,8 @@
     <string name="last_36_month">3 year ago</string>
     <string name="last_60_month">5 years ago</string>
     <string name="max_duration">as early as possible</string>
+
+    <string name="error_message">Failed to grab data.</string>
 
     <string name="currency_AUD">AUD</string>
     <string name="currency_BGN">BGN</string>
@@ -50,6 +52,45 @@
     <string name="currency_TRY">TRY</string>
     <string name="currency_USD">USD</string>
     <string name="currency_ZAR">ZAR</string>
+
+
+
+
+    <string-array name="currencies">
+        <item>AUD</item>
+        <item>BGN</item>
+        <item>BRL</item>
+        <item>CAD</item>
+        <item>CHF</item>
+        <item>CNY</item>
+        <item>CZK</item>
+        <item>DKK</item>
+        <item>EUR</item>
+        <item>GBP</item>
+        <item>HKD</item>
+        <item>HRK</item>
+        <item>HUF</item>
+        <item>IDR</item>
+        <item>ILS</item>
+        <item>INR</item>
+        <item>ISK</item>
+        <item>JPY</item>
+        <item>KRW</item>
+        <item>MXN</item>
+        <item>MYR</item>
+        <item>NOK</item>
+        <item>NZD</item>
+        <item>PHP</item>
+        <item>PLN</item>
+        <item>RON</item>
+        <item>RUB</item>
+        <item>SEK</item>
+        <item>SGD</item>
+        <item>THB</item>
+        <item>TRY</item>
+        <item>USD</item>
+        <item>ZAR</item>
+    </string-array>
 
 </resources>
 
