@@ -266,6 +266,11 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
 
 
         List<LineGraphSeries<DataPoint>> series = new ArrayList<>();
+
+  //      for (LineGraphSeries<DataPoint> date : series) {
+    //        date.appendData(getDataPoint(moneyTime.get(i)), true, 100);
+      //  }
+
         for (int i = 0; i < currencyCount; i++) {
             try {
                 series.add(new LineGraphSeries<DataPoint>(getDataPoint(moneyTime.get(i))));
@@ -274,33 +279,22 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
             }
         }
 
-        LineGraphSeries<DataPoint> series2 = new LineGraphSeries<>(new DataPoint[]{
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200)
-        });
+        for (int i = 0; i < series.size(); i++) {
+            series.get(i).setOnDataPointTapListener(new OnDataPointTapListener() {
+                @Override
+                public void onTap(final Series series, final DataPointInterface dataPoint) {
+                    Toast.makeText(getApplicationContext(), "Series1: On Data Point clicked: " + dataPoint, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
 
-        series2.setOnDataPointTapListener(new OnDataPointTapListener() {
-            @Override
-            public void onTap(final Series series, final DataPointInterface dataPoint) {
-                Toast.makeText(getApplicationContext(), "Series1: On Data Point clicked: " + dataPoint, Toast.LENGTH_SHORT).show();
-            }
-        });
 
         GraphView graph = (GraphView) findViewById(R.id.graph);
         graph.getGridLabelRenderer().setVerticalAxisTitle("Time");
         graph.getGridLabelRenderer().setHorizontalAxisTitle("ExchangeRate");
 
 
-        // set manual X bounds
-        graph.getViewport().setYAxisBoundsManual(true);
-        graph.getViewport().setMinY(-100);
-        graph.getViewport().setMaxY(100);
-        graph.getViewport().setXAxisBoundsManual(true);
-        graph.getViewport().setMinX(-10);
-        graph.getViewport().setMaxX(10);
+
 
 
         // enable scaling and scrolling
@@ -308,7 +302,10 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         graph.getViewport().setScalableY(true);
 
         graph.removeAllSeries();
-        graph.addSeries(series2);
+        for (LineGraphSeries<DataPoint> currency : series) {
+            graph.addSeries(currency);
+        }
+
 
         Toast.makeText(MainActivity.this, "0v0", Toast.LENGTH_LONG).show();
     }
@@ -318,8 +315,6 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         Date[] dates = new Date[datas.length];
         for (int i = 0; i < datas.length; i++) {
             dates[i] = new SimpleDateFormat("YYYY-MM-DD").parse(datesArray[i]);
-        }
-        for (int i = 0; i < datesArray.length; i++) {
             datas[i] = new DataPoint(dates[i], time.get(i));
         }
         return datas;
