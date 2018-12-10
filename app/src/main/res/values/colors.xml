@@ -3,4 +3,15 @@
     <color name="colorPrimary">#008577</color>
     <color name="colorPrimaryDark">#00574B</color>
     <color name="colorAccent">#D81B60</color>
+
+    <array name="rainbow">
+        <item>#FF0000</item>
+        <item>#EFEF00</item>
+        <item>#0066FF</item>
+        <item>#00FF00</item>
+        <item>#FF8F00</item>
+        <item>#FF008F</item>
+        <item>#00DFDF</item>
+        <item>#FF00FF</item>
+    </array>
 </resources>
