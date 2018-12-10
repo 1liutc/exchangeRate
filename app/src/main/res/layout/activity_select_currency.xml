@@ -28,7 +28,7 @@
             android:textColor="@android:color/black"
             android:textSize="18sp"
             android:visibility="visible"
-            app:layout_constraintEnd_toStartOf="@+id/cancelSelection"
+            app:layout_constraintEnd_toStartOf="@+id/cancel_currencyToCheck"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
@@ -39,7 +39,7 @@
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:layout_weight="1"
-            android:text="@string/currency_to_check"
+            android:text="to_check"
             android:textColor="@android:color/black"
             android:textSize="18sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -637,24 +637,24 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <Button
-            android:id="@+id/selectAndCallAPI"
+            android:id="@+id/select_currencyToCheck"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginLeft="8dp"
             android:layout_weight="1"
-            android:text="@string/select_and_call_api"
+            android:text="@string/select"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintStart_toStartOf="parent" />
 
         <Button
-            android:id="@+id/cancelSelection"
+            android:id="@+id/cancel_currencyToCheck"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:layout_marginRight="8dp"
             android:layout_weight="1"
-            android:text="@string/cancel_selection"
+            android:text="@string/cancel"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
     </LinearLayout>
