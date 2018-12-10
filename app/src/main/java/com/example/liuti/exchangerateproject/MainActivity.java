@@ -1,9 +1,11 @@
 package com.example.liuti.exchangerateproject;
 
 import android.app.AlertDialog;
+import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -13,7 +15,9 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
+import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.Viewport;
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
@@ -21,7 +25,9 @@ import com.jjoe64.graphview.GridLabelRenderer;
 
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
@@ -29,6 +35,7 @@ import org.json.JSONObject;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +57,7 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
     @SuppressWarnings("CheckStyle")
     static final String Selected_Currencies = "Selected_Currencies", Base_Currency = "Base_Currency";
 
+    private Button selectBaseCurrency, selectCurrencyToCheck;
 
     /**
      * The array of currencies' abbreviations and their descriptions.<p>
@@ -65,10 +73,10 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      */
     private ArrayList<Integer> selCurrencyLi;
     /**
-     * {@code selectedBaseCurrency} Stores the choice of base currency.<p>
+     * {@code selectedBase} Stores the choice of base currency.<p>
      * {@code tSeleCurrencies} Temporarily stores the selected base currency.
      */
-    private int selectedBaseCurrency, tSelectedBaseCurrency;
+    private int selectedBase, tselectedBase;
 
     /**
      * Request queue for network requests.
@@ -80,35 +88,38 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      */
     @SuppressWarnings({"magicnumber", "CheckStyle"})
     private void initializeDefaultSelectionPreference() {
-        SharedPreferences pref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences pref = getPreferences(Context.MODE_PRIVATE);
 //        if (pref.contains(BaseCurrency)) {
 //            return;
 //        }
         StringBuilder str = new StringBuilder();
-        str.append(1).append(",");
-        str.append(2).append(",");
-        str.append(3).append(",");
-        str.append(4).append(",");
+        str.append(5).append(",");
+        str.append(8).append(",");
+        str.append(9).append(",");
+        str.append(17).append(",");
         pref.edit()
                 .clear()
                 .putString(Selected_Currencies, str.toString())
-                .putInt(Base_Currency, 5)
+                .putInt(Base_Currency, 31)
                 .apply();
     }
 
     /**
-     * Read default selectin from preference files.
+     * Read default selection from preference files.
      */
     private void readDefaultSelectionPreference() {
-        SharedPreferences pref = MainActivity.this.getPreferences(Context.MODE_PRIVATE);
+        SharedPreferences pref = getPreferences(Context.MODE_PRIVATE);
         String savedString = pref.getString(Selected_Currencies, "");
         StringTokenizer st = new StringTokenizer(savedString, ",");
 
-        selectedBaseCurrency = pref.getInt(Base_Currency, 0);
+        selectedBase = pref.getInt(Base_Currency, 0);
         seleCurrencies = new boolean[currencyArr.length];
         tSeleCurrencies = new boolean[currencyArr.length];
+        selCurrencyLi = new ArrayList<>();
         while (st.hasMoreTokens()) {
-            seleCurrencies[Integer.parseInt(st.nextToken())] = true;
+            int t = Integer.parseInt(st.nextToken());
+            seleCurrencies[t] = true;
+            selCurrencyLi.add(t);
         }
 
         Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies),
@@ -127,16 +138,14 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
 
         requestQueue = Volley.newRequestQueue(this);
 
-        selCurrencyLi = new ArrayList<Integer>();
-
         //For building the single selection alert dialog of selectBaseCurrency only.
         @SuppressWarnings("CheckStyle") final AlertDialog.Builder singleSel_selectBaseCurrency
                 = new AlertDialog.Builder(MainActivity.this)
                 .setTitle(R.string.select_currency)
                 .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
-                        selectedBaseCurrency = tSelectedBaseCurrency;
-                        Toast.makeText(MainActivity.this, Integer.toString(selectedBaseCurrency), Toast.LENGTH_LONG).show();
+                        selectedBase = tselectedBase;
+                        Toast.makeText(MainActivity.this, Integer.toString(selectedBase), Toast.LENGTH_LONG).show();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -147,24 +156,23 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                 = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(final DialogInterface dialog, final int id) {
-                tSelectedBaseCurrency = id;
-                Toast.makeText(MainActivity.this, Integer.toString(tSelectedBaseCurrency), Toast.LENGTH_LONG).show();
+                tselectedBase = id;
+                Toast.makeText(MainActivity.this, Integer.toString(tselectedBase), Toast.LENGTH_LONG).show();
             }
         };
-        final Button selectBaseCurrency = findViewById(R.id.selectBaseCurrency);
+        selectBaseCurrency = findViewById(R.id.selectBaseCurrency);
         selectBaseCurrency.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
                 singleSel_selectBaseCurrency
                         .setSingleChoiceItems(R.array.currencies,
-                                MainActivity.this.selectedBaseCurrency,
+                                selectedBase,
                                 onSingleSelListener_selectBaseCurrency)
                         .create()
                         .show();
                 Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies), Toast.LENGTH_LONG).show();
             }
         });
-
         //For building the multi selection alert dialog of selectCurrencyToCheck only.
         @SuppressWarnings("CheckStyle") final AlertDialog.Builder multiSel_selectCurrencyToCheck
                 = new AlertDialog.Builder(MainActivity.this)
@@ -178,13 +186,27 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                             }
                         }
                         if (selCurrencyLi.size() > 8) {
+                            //restore original state
+                            selCurrencyLi.clear();
+                            for (int i = 0; i < seleCurrencies.length; i++) {
+                                if (seleCurrencies[i]) {
+                                    selCurrencyLi.add(i);
+                                }
+                            }
                             Toast.makeText(MainActivity.this, "Too many selections (more than 8)", Toast.LENGTH_LONG).show();
+                            return;
+                        } else if (selCurrencyLi.size() == 0) {
+                            for (int i = 0; i < seleCurrencies.length; i++) {
+                                if (seleCurrencies[i]) {
+                                    selCurrencyLi.add(i);
+                                }
+                            }
+                            Toast.makeText(MainActivity.this, "Please select at least one", Toast.LENGTH_LONG).show();
                             return;
                         }
                         System.arraycopy(tSeleCurrencies, 0,
                                 seleCurrencies, 0, tSeleCurrencies.length);
                         Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies), Toast.LENGTH_LONG).show();
-                        startAPICall();
                     }
                 })
                 .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
@@ -194,20 +216,50 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         @SuppressWarnings("CheckStyle") final DialogInterface.OnMultiChoiceClickListener onMultiSelListener_selectCurrencyToCheck
                 = new DialogInterface.OnMultiChoiceClickListener() {
             public void onClick(final DialogInterface dialog, final int i, final boolean checked) {
-                MainActivity.this.tSeleCurrencies[i] = checked;
+                tSeleCurrencies[i] = checked;
             }
         };
-        final Button selectCurrencyToCheck = findViewById(R.id.selectCurrencyToCheck);
+
+        selectCurrencyToCheck = findViewById(R.id.selectCurrencyToCheck);
         selectCurrencyToCheck.setOnClickListener(new View.OnClickListener() {
             public void onClick(final View v) {
                 System.arraycopy(seleCurrencies, 0,
                         tSeleCurrencies, 0, seleCurrencies.length);
                 multiSel_selectCurrencyToCheck
                         .setMultiChoiceItems(R.array.currencies,
-                                MainActivity.this.tSeleCurrencies,
+                                tSeleCurrencies,
                                 onMultiSelListener_selectCurrencyToCheck)
                         .create().
                         show();
+            }
+        });
+
+        Button since = findViewById(R.id.time);
+        since.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                final Calendar c = Calendar.getInstance();
+                int year = c.get(Calendar.YEAR);
+                int month = c.get(Calendar.MONTH);
+                int day = c.get(Calendar.DAY_OF_MONTH);
+                DatePickerDialog picker = new DatePickerDialog(MainActivity.this,
+                        new DatePickerDialog.OnDateSetListener() {
+                            @Override
+                            public void onDateSet(DatePicker view, int y, int m, int d) {
+
+                            }
+                        }, year, month, day);
+                //Toast.makeText(MainActivity.this, picker.getDatePicker().findViewById(Resources.getSystem().getIdentifier("day", "id", "android")).toString(), Toast.LENGTH_LONG).show();
+                picker.getDatePicker().setSpinnersShown(true);
+                picker.getDatePicker().setCalendarViewShown(false);
+                picker.show();
+            }
+        });
+
+        Button start = findViewById(R.id.startAPI);
+        start.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                startAPICall();
             }
         });
     }
@@ -237,6 +289,7 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
             Date[] dates = new Date[datesArr.length];
+            int[] colors = getResources().getIntArray(R.array.rainbow);
             for (int i = 0; i < datesArr.length; i++) {
                 dates[i] = sdf.parse(datesArr[i]);
             }
@@ -250,13 +303,36 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                     ser.appendData(dp, true, datesArr.length, true);
                 }
                 ser.setTitle(symbol);
+                ser.setColor(colors[i]);
                 graph.addSeries(ser);
             }
         } catch (Exception e) {
         }
 
         GridLabelRenderer lblRenderer = graph.getGridLabelRenderer();
-        lblRenderer.setLabelFormatter(new DateAsXAxisLabelFormatter(MainActivity.this, new SimpleDateFormat("M/yy")));
+        DefaultLabelFormatter dlf = new DefaultLabelFormatter() {
+            private SimpleDateFormat large = new SimpleDateFormat("M/yy");
+            private SimpleDateFormat small = new SimpleDateFormat("M/d");
+            private Calendar mCalendar = Calendar.getInstance();
+            private long twoMonths = 2 * 30 * 24 * 60 * 60 * 1000;
+
+            public String formatLabel(double value, boolean isValueX) {
+                if (isValueX) {
+                    this.mCalendar.setTimeInMillis((long) value);
+                    Log.e(TAG, Double.toString(mViewport.getMaxX(false)));
+                    if (mViewport.getMaxX(false)
+                            - mViewport.getMinX(false) < twoMonths) {
+                        return small.format(this.mCalendar.getTimeInMillis());
+                    } else {
+                        return large.format(this.mCalendar.getTimeInMillis());
+                    }
+                } else {
+                    return super.formatLabel(value, false);
+                }
+            }
+        };
+        dlf.setViewport(graph.getViewport());
+        lblRenderer.setLabelFormatter(dlf);
         lblRenderer.setVerticalAxisTitle("ExchangeRate");
         lblRenderer.setHorizontalAxisTitle("Time");
         lblRenderer.setNumHorizontalLabels(5);
@@ -270,8 +346,6 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
 
         graph.setVisibility(View.VISIBLE);
         findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
-
-        Toast.makeText(MainActivity.this, "0v0", Toast.LENGTH_LONG).show();
     }
 
     /**
@@ -285,7 +359,7 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         sb.append("&end_at=");
         sb.append("2018-12-01");
         sb.append("&base=");
-        sb.append(currencyArr[selectedBaseCurrency]);
+        sb.append(currencyArr[selectedBase]);
         sb.append("&symbols=");
         for (int i = 0; i < seleCurrencies.length; i++) {
             if (seleCurrencies[i]) {
@@ -293,36 +367,21 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                 sb.append(',');
             }
         }
-        if (sb.charAt(sb.length() - 1) == ',') {
-            sb.deleteCharAt(sb.length() - 1);
-        } else {
-            //noinspection CheckStyle
-            sb.delete(sb.length() - 9, sb.length());
-        }
-        try {
-            JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
-                    Request.Method.GET,
-                    "https://api.exchangeratesapi.io/history"
-                            + sb.toString(),
-                    null,
-                    MainActivity.this,
-                    new Response.ErrorListener() {
-                        @Override
-                        public void onErrorResponse(final VolleyError error) {
-                            Toast.makeText(MainActivity.this,
-                                    getString(R.string.error_message) + error.getLocalizedMessage(),
-                                    Toast.LENGTH_LONG);
-                        }
-                    });
-            Toast.makeText(MainActivity.this,
-                    Boolean.toString(jsonObjectRequest == null),
-                    Toast.LENGTH_LONG).show();
-            requestQueue.add(jsonObjectRequest);
-        } catch (Exception e) {
-            Toast.makeText(MainActivity.this,
-                    e.toString(),
-                    Toast.LENGTH_LONG).show();
-            e.printStackTrace();
-        }
+        sb.deleteCharAt(sb.length() - 1);
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
+                Request.Method.GET,
+                "https://api.exchangeratesapi.io/history"
+                        + sb.toString(),
+                null,
+                MainActivity.this,
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(final VolleyError error) {
+                        Toast.makeText(MainActivity.this,
+                                getString(R.string.error_message) + error.getLocalizedMessage(),
+                                Toast.LENGTH_LONG);
+                    }
+                });
+        requestQueue.add(jsonObjectRequest);
     }
 }
