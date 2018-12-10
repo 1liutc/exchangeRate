@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -15,13 +14,9 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.jjoe64.graphview.GraphView;
-import com.jjoe64.graphview.Viewport;
 import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
-import com.jjoe64.graphview.series.OnDataPointTapListener;
-import com.jjoe64.graphview.series.Series;
-import com.jjoe64.graphview.series.DataPointInterface;
 import com.jjoe64.graphview.GridLabelRenderer;
 
 import android.util.Log;
@@ -176,14 +171,18 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                 .setTitle(R.string.select_currency)
                 .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
-                        System.arraycopy(tSeleCurrencies, 0,
-                                seleCurrencies, 0, tSeleCurrencies.length);
                         selCurrencyLi.clear();
-                        for (int i = 0; i < seleCurrencies.length; i++) {
-                            if (seleCurrencies[i]) {
+                        for (int i = 0; i < tSeleCurrencies.length; i++) {
+                            if (tSeleCurrencies[i]) {
                                 selCurrencyLi.add(i);
                             }
                         }
+                        if (selCurrencyLi.size() > 8) {
+                            Toast.makeText(MainActivity.this, "Too many selections (more than 8)", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        System.arraycopy(tSeleCurrencies, 0,
+                                seleCurrencies, 0, tSeleCurrencies.length);
                         Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies), Toast.LENGTH_LONG).show();
                         startAPICall();
                     }
@@ -266,6 +265,8 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         // enable scaling and scrolling
         graph.getViewport().setScalable(true);
         graph.getViewport().setScalableY(true);
+
+        graph.getLegendRenderer().setVisible(true);
 
         graph.setVisibility(View.VISIBLE);
         findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
