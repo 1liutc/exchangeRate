@@ -2,12 +2,16 @@
     <string name="app_name">ExchangeRateProject</string>
     <string name="select_currency">Select Currency</string>
 
-    <string name="select">Select</string>
+    <string name="base">Base</string>
+    <string name="exchange">Exchange</string>
     <string name="cancel">Cancel</string>
+    <string name="select">Select</string>
+
 
     <string name="base_currency">Base Currency</string>
     <string name="currency_to_check">Currency to Check</string>
     <string name="since">Since</string>
+    <string name="start">Start</string>
 
     <string name="last_01_month">1 month ago</string>
     <string name="last_03_month">3 months ago</string>

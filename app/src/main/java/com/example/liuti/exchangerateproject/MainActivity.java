@@ -20,6 +20,7 @@ import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.OnDataPointTapListener;
 import com.jjoe64.graphview.series.Series;
 import com.jjoe64.graphview.series.DataPointInterface;
+import com.jjoe64.graphview.GridLabelRenderer;
 
 import android.util.Log;
 import android.view.View;
@@ -28,9 +29,13 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.StringTokenizer;
 
 /**
@@ -46,6 +51,7 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      */
     @SuppressWarnings("CheckStyle")
     static final String Selected_Currencies = "Selected_Currencies", Base_Currency = "Base_Currency";
+
 
     /**
      * The array of currencies' abbreviations and their descriptions.<p>
@@ -67,6 +73,12 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      * Request queue for network requests.
      */
     private static RequestQueue requestQueue;
+
+    private String[] datesArray;
+
+    private int currencyCount;
+
+    private List<List<Double>> moneyTime;
 
     /**
      * Put default selections into preference files.
@@ -215,6 +227,25 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                 datesArr = datesAL.toArray(new String[0]);
             }
             Arrays.sort(datesArr);
+            datesArray = datesArr;
+
+            currencyCount = 0;
+            List<Integer> currencyList = new ArrayList<Integer>();
+            for (int i = 0; i < selectedCurrencies.length; i++) {
+                if (selectedCurrencies[i]) {
+                    currencyCount++;
+                    currencyList.add(i);
+                }
+            }
+
+            moneyTime = new ArrayList<>();
+            for (int i = 0; i < currencyCount; i++) {
+                ArrayList<Double> temp = new ArrayList<>();
+                for (int j = 0; j < datesArr.length; j++) {
+                    temp.add(rates.getJSONObject(datesArr[j].substring(0, 3)).getDouble(currencyArr[currencyList.get(i)]));
+                }
+                moneyTime.add(temp);
+            }
 
 //            StringBuffer sb = new StringBuffer();
 //            for (int i = 0; i < datesArr.length; i++) {
@@ -233,37 +264,37 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
 //            Log.wtf(TAG, e.getMessage());
         }
 
-        LineGraphSeries<DataPoint> series2 = new LineGraphSeries<>(new DataPoint[]{
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200),
-                new DataPoint(Math.random() * 40 - 20, Math.random() * 400 - 200)
-        });
 
-        series2.setOnDataPointTapListener(new OnDataPointTapListener() {
-            @Override
-            public void onTap(final Series series, final DataPointInterface dataPoint) {
-                Toast.makeText(getApplicationContext(), "Series1: On Data Point clicked: " + dataPoint, Toast.LENGTH_SHORT).show();
+        List<LineGraphSeries<DataPoint>> series = new ArrayList<>();
+
+  //      for (LineGraphSeries<DataPoint> date : series) {
+    //        date.appendData(getDataPoint(moneyTime.get(i)), true, 100);
+      //  }
+
+        for (int i = 0; i < currencyCount; i++) {
+            try {
+                series.add(new LineGraphSeries<DataPoint>(getDataPoint(moneyTime.get(i))));
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
-        });
+        }
+
+        for (int i = 0; i < series.size(); i++) {
+            series.get(i).setOnDataPointTapListener(new OnDataPointTapListener() {
+                @Override
+                public void onTap(final Series series, final DataPointInterface dataPoint) {
+                    Toast.makeText(getApplicationContext(), "Series1: On Data Point clicked: " + dataPoint, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+
 
         GraphView graph = (GraphView) findViewById(R.id.graph);
-        // set manual X bounds
-        graph.getViewport().setYAxisBoundsManual(true);
-        graph.getViewport().setMinY(-100);
-        graph.getViewport().setMaxY(100);
+        graph.getGridLabelRenderer().setVerticalAxisTitle("Time");
+        graph.getGridLabelRenderer().setHorizontalAxisTitle("ExchangeRate");
 
-        graph.getViewport().setXAxisBoundsManual(true);
-        graph.getViewport().setMinX(-10);
-        graph.getViewport().setMaxX(10);
+
+
 
 
         // enable scaling and scrolling
@@ -271,16 +302,28 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         graph.getViewport().setScalableY(true);
 
         graph.removeAllSeries();
-        graph.addSeries(series2);
+        for (LineGraphSeries<DataPoint> currency : series) {
+            graph.addSeries(currency);
+        }
+
 
         Toast.makeText(MainActivity.this, "0v0", Toast.LENGTH_LONG).show();
+    }
+
+    private DataPoint[] getDataPoint(List<Double> time) throws ParseException {
+        DataPoint[] datas = new DataPoint[time.size()];
+        Date[] dates = new Date[datas.length];
+        for (int i = 0; i < datas.length; i++) {
+            dates[i] = new SimpleDateFormat("YYYY-MM-DD").parse(datesArray[i]);
+            datas[i] = new DataPoint(dates[i], time.get(i));
+        }
+        return datas;
     }
 
     /**
      * Make an API call.
      */
     void startAPICall() {
-
         final int start = 0, countryCodeLen = 3;
         StringBuffer sb = new StringBuffer();
         sb.append("?start_at=");
