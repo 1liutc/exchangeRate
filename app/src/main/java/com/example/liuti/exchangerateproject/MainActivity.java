@@ -15,6 +15,8 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.Volley;
 import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.Viewport;
+import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.series.OnDataPointTapListener;
@@ -25,6 +27,7 @@ import com.jjoe64.graphview.GridLabelRenderer;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import org.json.JSONObject;
@@ -41,7 +44,7 @@ import java.util.StringTokenizer;
 /**
  * The only activity of exchangeRate.
  */
-public class MainActivity extends AppCompatActivity implements Response.Listener<JSONObject>{
+public class MainActivity extends AppCompatActivity implements Response.Listener<JSONObject> {
     /**
      * Default logging tag for messages from the main activity.
      */
@@ -58,27 +61,24 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      */
     private String[] currencyArr;
     /**
-     * {@code selectedCurrencies} Stores the choice of currencies that we want to check rates.<p>
-     * {@code tSelectedCurrencies} Temporarily stores the selected currencies.
+     * {@code seleCurrencies} Stores the choice of currencies that we want to check rates.<p>
+     * {@code tSeleCurrencies} Temporarily stores the selected currencies.
      */
-    private boolean[] selectedCurrencies, tSelectedCurrencies;
+    private boolean[] seleCurrencies, tSeleCurrencies;
+    /**
+     * An ArrayList that stores the index of selected currencies.
+     */
+    private ArrayList<Integer> selCurrencyLi;
     /**
      * {@code selectedBaseCurrency} Stores the choice of base currency.<p>
-     * {@code tSelectedCurrencies} Temporarily stores the selected base currency.
+     * {@code tSeleCurrencies} Temporarily stores the selected base currency.
      */
     private int selectedBaseCurrency, tSelectedBaseCurrency;
-
 
     /**
      * Request queue for network requests.
      */
     private static RequestQueue requestQueue;
-
-    private String[] datesArray;
-
-    private int currencyCount;
-
-    private List<List<Double>> moneyTime;
 
     /**
      * Put default selections into preference files.
@@ -110,13 +110,13 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         StringTokenizer st = new StringTokenizer(savedString, ",");
 
         selectedBaseCurrency = pref.getInt(Base_Currency, 0);
-        selectedCurrencies = new boolean[currencyArr.length];
-        tSelectedCurrencies = new boolean[currencyArr.length];
+        seleCurrencies = new boolean[currencyArr.length];
+        tSeleCurrencies = new boolean[currencyArr.length];
         while (st.hasMoreTokens()) {
-            selectedCurrencies[Integer.parseInt(st.nextToken())] = true;
+            seleCurrencies[Integer.parseInt(st.nextToken())] = true;
         }
 
-        Toast.makeText(MainActivity.this, Arrays.toString(selectedCurrencies),
+        Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies),
                 Toast.LENGTH_LONG).show();
     }
 
@@ -125,15 +125,17 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
         currencyArr = getResources().getStringArray(R.array.currencies);
         initializeDefaultSelectionPreference();
         readDefaultSelectionPreference();
 
         requestQueue = Volley.newRequestQueue(this);
 
+        selCurrencyLi = new ArrayList<Integer>();
+
         //For building the single selection alert dialog of selectBaseCurrency only.
-        @SuppressWarnings("CheckStyle")
-        final AlertDialog.Builder singleSel_selectBaseCurrency
+        @SuppressWarnings("CheckStyle") final AlertDialog.Builder singleSel_selectBaseCurrency
                 = new AlertDialog.Builder(MainActivity.this)
                 .setTitle(R.string.select_currency)
                 .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
@@ -146,8 +148,7 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                     public void onClick(final DialogInterface dialog, final int id) {
                     }
                 });
-        @SuppressWarnings("CheckStyle")
-        final DialogInterface.OnClickListener onSingleSelListener_selectBaseCurrency
+        @SuppressWarnings("CheckStyle") final DialogInterface.OnClickListener onSingleSelListener_selectBaseCurrency
                 = new DialogInterface.OnClickListener() {
             @Override
             public void onClick(final DialogInterface dialog, final int id) {
@@ -165,20 +166,25 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                                 onSingleSelListener_selectBaseCurrency)
                         .create()
                         .show();
-                Toast.makeText(MainActivity.this, Arrays.toString(selectedCurrencies), Toast.LENGTH_LONG).show();
+                Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies), Toast.LENGTH_LONG).show();
             }
         });
 
         //For building the multi selection alert dialog of selectCurrencyToCheck only.
-        @SuppressWarnings("CheckStyle")
-        final AlertDialog.Builder multiSel_selectCurrencyToCheck
+        @SuppressWarnings("CheckStyle") final AlertDialog.Builder multiSel_selectCurrencyToCheck
                 = new AlertDialog.Builder(MainActivity.this)
                 .setTitle(R.string.select_currency)
                 .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
                     public void onClick(final DialogInterface dialog, final int id) {
-                        System.arraycopy(tSelectedCurrencies, 0,
-                                selectedCurrencies, 0, tSelectedCurrencies.length);
-                        Toast.makeText(MainActivity.this, Arrays.toString(selectedCurrencies), Toast.LENGTH_LONG).show();
+                        System.arraycopy(tSeleCurrencies, 0,
+                                seleCurrencies, 0, tSeleCurrencies.length);
+                        selCurrencyLi.clear();
+                        for (int i = 0; i < seleCurrencies.length; i++) {
+                            if (seleCurrencies[i]) {
+                                selCurrencyLi.add(i);
+                            }
+                        }
+                        Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies), Toast.LENGTH_LONG).show();
                         startAPICall();
                     }
                 })
@@ -186,21 +192,20 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                     public void onClick(final DialogInterface dialog, final int id) {
                     }
                 });
-        @SuppressWarnings("CheckStyle")
-        final DialogInterface.OnMultiChoiceClickListener onMultiSelListener_selectCurrencyToCheck
+        @SuppressWarnings("CheckStyle") final DialogInterface.OnMultiChoiceClickListener onMultiSelListener_selectCurrencyToCheck
                 = new DialogInterface.OnMultiChoiceClickListener() {
             public void onClick(final DialogInterface dialog, final int i, final boolean checked) {
-                MainActivity.this.tSelectedCurrencies[i] = checked;
+                MainActivity.this.tSeleCurrencies[i] = checked;
             }
         };
         final Button selectCurrencyToCheck = findViewById(R.id.selectCurrencyToCheck);
         selectCurrencyToCheck.setOnClickListener(new View.OnClickListener() {
             public void onClick(final View v) {
-                System.arraycopy(selectedCurrencies, 0,
-                        tSelectedCurrencies, 0, selectedCurrencies.length);
+                System.arraycopy(seleCurrencies, 0,
+                        tSeleCurrencies, 0, seleCurrencies.length);
                 multiSel_selectCurrencyToCheck
                         .setMultiChoiceItems(R.array.currencies,
-                                MainActivity.this.tSelectedCurrencies,
+                                MainActivity.this.tSeleCurrencies,
                                 onMultiSelListener_selectCurrencyToCheck)
                         .create().
                         show();
@@ -213,6 +218,9 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      */
     @SuppressWarnings("CheckStyle")
     public void onResponse(final JSONObject response) {
+        GraphView graph = findViewById(R.id.graph);
+        graph.setVisibility(View.INVISIBLE);
+        graph.removeAllSeries();
 
         Log.d(TAG, response.toString());
         try {
@@ -227,115 +235,60 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                 datesArr = datesAL.toArray(new String[0]);
             }
             Arrays.sort(datesArr);
-            datesArray = datesArr;
 
-            currencyCount = 0;
-            List<Integer> currencyList = new ArrayList<Integer>();
-            for (int i = 0; i < selectedCurrencies.length; i++) {
-                if (selectedCurrencies[i]) {
-                    currencyCount++;
-                    currencyList.add(i);
-                }
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date[] dates = new Date[datesArr.length];
+            for (int i = 0; i < datesArr.length; i++) {
+                dates[i] = sdf.parse(datesArr[i]);
             }
-
-            moneyTime = new ArrayList<>();
-            for (int i = 0; i < currencyCount; i++) {
-                ArrayList<Double> temp = new ArrayList<>();
+            for (int i = 0; i < selCurrencyLi.size(); i++) {
+                LineGraphSeries<DataPoint> ser = new LineGraphSeries<>();
+                String symbol = currencyArr[selCurrencyLi.get(i)];
                 for (int j = 0; j < datesArr.length; j++) {
-                    temp.add(rates.getJSONObject(datesArr[j].substring(0, 3)).getDouble(currencyArr[currencyList.get(i)]));
+                    DataPoint dp = new DataPoint(
+                            dates[j],
+                            rates.getJSONObject(datesArr[j]).getDouble(symbol));
+                    ser.appendData(dp, true, datesArr.length, true);
                 }
-                moneyTime.add(temp);
+                ser.setTitle(symbol);
+                graph.addSeries(ser);
             }
-
-//            StringBuffer sb = new StringBuffer();
-//            for (int i = 0; i < datesArr.length; i++) {
-//
-//                sb.append(datesArr[i]);
-//                sb.append(':');
-//                sb.append(rates.getJSONObject(datesArr[i]).getDouble("USD"));
-//                sb.append('\n');
-//                if (i == datesArr.length / 2) {
-//                    Log.d(TAG, sb.toString());
-//                    sb.delete(0, sb.length());
-//                }
-//            }
-//            Log.d(TAG, sb.toString());
         } catch (Exception e) {
-//            Log.wtf(TAG, e.getMessage());
         }
 
-
-        List<LineGraphSeries<DataPoint>> series = new ArrayList<>();
-
-  //      for (LineGraphSeries<DataPoint> date : series) {
-    //        date.appendData(getDataPoint(moneyTime.get(i)), true, 100);
-      //  }
-
-        for (int i = 0; i < currencyCount; i++) {
-            try {
-                series.add(new LineGraphSeries<DataPoint>(getDataPoint(moneyTime.get(i))));
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-        }
-
-        for (int i = 0; i < series.size(); i++) {
-            series.get(i).setOnDataPointTapListener(new OnDataPointTapListener() {
-                @Override
-                public void onTap(final Series series, final DataPointInterface dataPoint) {
-                    Toast.makeText(getApplicationContext(), "Series1: On Data Point clicked: " + dataPoint, Toast.LENGTH_SHORT).show();
-                }
-            });
-        }
-
-
-        GraphView graph = (GraphView) findViewById(R.id.graph);
-        graph.getGridLabelRenderer().setVerticalAxisTitle("Time");
-        graph.getGridLabelRenderer().setHorizontalAxisTitle("ExchangeRate");
-
-
-
+        GridLabelRenderer lblRenderer = graph.getGridLabelRenderer();
+        lblRenderer.setLabelFormatter(new DateAsXAxisLabelFormatter(MainActivity.this, new SimpleDateFormat("M/yy")));
+        lblRenderer.setVerticalAxisTitle("ExchangeRate");
+        lblRenderer.setHorizontalAxisTitle("Time");
+        lblRenderer.setNumHorizontalLabels(5);
 
 
         // enable scaling and scrolling
         graph.getViewport().setScalable(true);
         graph.getViewport().setScalableY(true);
 
-        graph.removeAllSeries();
-        for (LineGraphSeries<DataPoint> currency : series) {
-            graph.addSeries(currency);
-        }
-
+        graph.setVisibility(View.VISIBLE);
+        findViewById(R.id.progressBar).setVisibility(View.INVISIBLE);
 
         Toast.makeText(MainActivity.this, "0v0", Toast.LENGTH_LONG).show();
-    }
-
-    private DataPoint[] getDataPoint(List<Double> time) throws ParseException {
-        DataPoint[] datas = new DataPoint[time.size()];
-        Date[] dates = new Date[datas.length];
-        for (int i = 0; i < datas.length; i++) {
-            dates[i] = new SimpleDateFormat("YYYY-MM-DD").parse(datesArray[i]);
-            datas[i] = new DataPoint(dates[i], time.get(i));
-        }
-        return datas;
     }
 
     /**
      * Make an API call.
      */
     void startAPICall() {
-        final int start = 0, countryCodeLen = 3;
+        findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
         StringBuffer sb = new StringBuffer();
         sb.append("?start_at=");
         sb.append("2017-12-01");
         sb.append("&end_at=");
         sb.append("2018-12-01");
         sb.append("&base=");
-        sb.append(currencyArr[selectedBaseCurrency], start, start + countryCodeLen);
+        sb.append(currencyArr[selectedBaseCurrency]);
         sb.append("&symbols=");
-        for (int i = 0; i < selectedCurrencies.length; i++) {
-            if (selectedCurrencies[i]) {
-                sb.append(currencyArr[i], start, start + countryCodeLen);
+        for (int i = 0; i < seleCurrencies.length; i++) {
+            if (seleCurrencies[i]) {
+                sb.append(currencyArr[i]);
                 sb.append(',');
             }
         }
@@ -353,13 +306,13 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                     null,
                     MainActivity.this,
                     new Response.ErrorListener() {
-                @Override
-                public void onErrorResponse(final VolleyError error) {
-                    Toast.makeText(MainActivity.this,
-                            getString(R.string.error_message) + error.getLocalizedMessage(),
-                            Toast.LENGTH_LONG);
-                }
-            });
+                        @Override
+                        public void onErrorResponse(final VolleyError error) {
+                            Toast.makeText(MainActivity.this,
+                                    getString(R.string.error_message) + error.getLocalizedMessage(),
+                                    Toast.LENGTH_LONG);
+                        }
+                    });
             Toast.makeText(MainActivity.this,
                     Boolean.toString(jsonObjectRequest == null),
                     Toast.LENGTH_LONG).show();
@@ -370,6 +323,5 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                     Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
-
     }
 }
