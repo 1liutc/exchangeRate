@@ -1,11 +1,9 @@
 package com.example.liuti.exchangerateproject;
 
 import android.app.AlertDialog;
-import android.app.DatePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -18,30 +16,27 @@ import com.android.volley.toolbox.Volley;
 import com.jjoe64.graphview.DefaultLabelFormatter;
 import com.jjoe64.graphview.GraphView;
 import com.jjoe64.graphview.Viewport;
-import com.jjoe64.graphview.helper.DateAsXAxisLabelFormatter;
 import com.jjoe64.graphview.series.DataPoint;
 import com.jjoe64.graphview.series.LineGraphSeries;
 import com.jjoe64.graphview.GridLabelRenderer;
 
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.ProgressBar;
+import android.widget.NumberPicker;
 import android.widget.Toast;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.StringTokenizer;
+import java.util.TimeZone;
 
 /**
  * The only activity of exchangeRate.
@@ -51,32 +46,29 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      * Default logging tag for messages from the main activity.
      */
     static final String TAG = "ExchangeRate";
+
     /**
      * Name tag to store and retrieve preferences.
      */
     @SuppressWarnings("CheckStyle")
     static final String Selected_Currencies = "Selected_Currencies", Base_Currency = "Base_Currency";
 
-    private Button selectBaseCurrency, selectCurrencyToCheck;
-
     /**
-     * The array of currencies' abbreviations and their descriptions.<p>
+     * The array of currencies' abbreviations and their descriptions.
      */
     private String[] currencyArr;
+
     /**
-     * {@code seleCurrencies} Stores the choice of currencies that we want to check rates.<p>
-     * {@code tSeleCurrencies} Temporarily stores the selected currencies.
+     * Stores the choice of currencies that we want to check rates.
      */
-    private boolean[] seleCurrencies, tSeleCurrencies;
+    private final ArrayList<Integer> selCurrencyLi = new ArrayList<>();
+
     /**
-     * An ArrayList that stores the index of selected currencies.
+     * {@code selectedBase} Stores the choice of base currency.
      */
-    private ArrayList<Integer> selCurrencyLi;
-    /**
-     * {@code selectedBase} Stores the choice of base currency.<p>
-     * {@code tSeleCurrencies} Temporarily stores the selected base currency.
-     */
-    private int selectedBase, tselectedBase;
+    private int selectedBase;
+
+    private Date start, end;
 
     /**
      * Request queue for network requests.
@@ -113,16 +105,12 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         StringTokenizer st = new StringTokenizer(savedString, ",");
 
         selectedBase = pref.getInt(Base_Currency, 0);
-        seleCurrencies = new boolean[currencyArr.length];
-        tSeleCurrencies = new boolean[currencyArr.length];
-        selCurrencyLi = new ArrayList<>();
         while (st.hasMoreTokens()) {
             int t = Integer.parseInt(st.nextToken());
-            seleCurrencies[t] = true;
             selCurrencyLi.add(t);
         }
 
-        Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies),
+        Toast.makeText(MainActivity.this, selCurrencyLi.toString(),
                 Toast.LENGTH_LONG).show();
     }
 
@@ -136,125 +124,221 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         initializeDefaultSelectionPreference();
         readDefaultSelectionPreference();
 
+        final boolean[] seleCurrencies = new boolean[currencyArr.length];
+        for (int i : selCurrencyLi) {
+            seleCurrencies[i] = true;
+        }
+
+        //method variable has to be final in order to be accessed by anonymous inner classes
+        final int[] tselectedBase = new int[]{selectedBase};
+
+        {
+            Calendar tempCld = Calendar.getInstance();
+            tempCld.setTimeInMillis(System.currentTimeMillis());
+            end = tempCld.getTime();
+            tempCld.add(Calendar.MONTH, -3);
+            start = tempCld.getTime();
+        }
+
         requestQueue = Volley.newRequestQueue(this);
 
-        //For building the single selection alert dialog of selectBaseCurrency only.
-        @SuppressWarnings("CheckStyle") final AlertDialog.Builder singleSel_selectBaseCurrency
-                = new AlertDialog.Builder(MainActivity.this)
-                .setTitle(R.string.select_currency)
-                .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        selectedBase = tselectedBase;
-                        Toast.makeText(MainActivity.this, Integer.toString(selectedBase), Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                    }
-                });
-        @SuppressWarnings("CheckStyle") final DialogInterface.OnClickListener onSingleSelListener_selectBaseCurrency
-                = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(final DialogInterface dialog, final int id) {
-                tselectedBase = id;
-                Toast.makeText(MainActivity.this, Integer.toString(tselectedBase), Toast.LENGTH_LONG).show();
-            }
-        };
-        selectBaseCurrency = findViewById(R.id.selectBaseCurrency);
+        Button selectBaseCurrency = findViewById(R.id.selectBaseCurrency);
         selectBaseCurrency.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                singleSel_selectBaseCurrency
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.select_currency)
+                        .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialog, final int id) {
+                                selectedBase = tselectedBase[0];
+                                Toast.makeText(MainActivity.this, Integer.toString(selectedBase), Toast.LENGTH_LONG).show();
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialog, final int id) {
+                            }
+                        })
                         .setSingleChoiceItems(R.array.currencies,
                                 selectedBase,
-                                onSingleSelListener_selectBaseCurrency)
+                                new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(final DialogInterface dialog, final int id) {
+                                        tselectedBase[0] = id;
+                                        Toast.makeText(MainActivity.this, Arrays.toString(tselectedBase), Toast.LENGTH_LONG).show();
+                                    }
+                                })
                         .create()
                         .show();
-                Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies), Toast.LENGTH_LONG).show();
             }
         });
-        //For building the multi selection alert dialog of selectCurrencyToCheck only.
-        @SuppressWarnings("CheckStyle") final AlertDialog.Builder multiSel_selectCurrencyToCheck
-                = new AlertDialog.Builder(MainActivity.this)
-                .setTitle(R.string.select_currency)
-                .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                        selCurrencyLi.clear();
-                        for (int i = 0; i < tSeleCurrencies.length; i++) {
-                            if (tSeleCurrencies[i]) {
-                                selCurrencyLi.add(i);
-                            }
-                        }
-                        if (selCurrencyLi.size() > 8) {
-                            //restore original state
-                            selCurrencyLi.clear();
-                            for (int i = 0; i < seleCurrencies.length; i++) {
-                                if (seleCurrencies[i]) {
-                                    selCurrencyLi.add(i);
-                                }
-                            }
-                            Toast.makeText(MainActivity.this, "Too many selections (more than 8)", Toast.LENGTH_LONG).show();
-                            return;
-                        } else if (selCurrencyLi.size() == 0) {
-                            for (int i = 0; i < seleCurrencies.length; i++) {
-                                if (seleCurrencies[i]) {
-                                    selCurrencyLi.add(i);
-                                }
-                            }
-                            Toast.makeText(MainActivity.this, "Please select at least one", Toast.LENGTH_LONG).show();
-                            return;
-                        }
-                        System.arraycopy(tSeleCurrencies, 0,
-                                seleCurrencies, 0, tSeleCurrencies.length);
-                        Toast.makeText(MainActivity.this, Arrays.toString(seleCurrencies), Toast.LENGTH_LONG).show();
-                    }
-                })
-                .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(final DialogInterface dialog, final int id) {
-                    }
-                });
-        @SuppressWarnings("CheckStyle") final DialogInterface.OnMultiChoiceClickListener onMultiSelListener_selectCurrencyToCheck
-                = new DialogInterface.OnMultiChoiceClickListener() {
-            public void onClick(final DialogInterface dialog, final int i, final boolean checked) {
-                tSeleCurrencies[i] = checked;
-            }
-        };
 
-        selectCurrencyToCheck = findViewById(R.id.selectCurrencyToCheck);
+        Button selectCurrencyToCheck = findViewById(R.id.selectCurrencyToCheck);
         selectCurrencyToCheck.setOnClickListener(new View.OnClickListener() {
             public void onClick(final View v) {
-                System.arraycopy(seleCurrencies, 0,
-                        tSeleCurrencies, 0, seleCurrencies.length);
-                multiSel_selectCurrencyToCheck
-                        .setMultiChoiceItems(R.array.currencies,
-                                tSeleCurrencies,
-                                onMultiSelListener_selectCurrencyToCheck)
-                        .create().
-                        show();
-            }
-        });
-
-        Button since = findViewById(R.id.time);
-        since.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final Calendar c = Calendar.getInstance();
-                int year = c.get(Calendar.YEAR);
-                int month = c.get(Calendar.MONTH);
-                int day = c.get(Calendar.DAY_OF_MONTH);
-                DatePickerDialog picker = new DatePickerDialog(MainActivity.this,
-                        new DatePickerDialog.OnDateSetListener() {
-                            @Override
-                            public void onDateSet(DatePicker view, int y, int m, int d) {
-
+                new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.select_currency)
+                        .setPositiveButton(R.string.select, new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialog, final int id) {
+                                int count = 0;
+                                for (boolean i : seleCurrencies) {
+                                    if (i) {
+                                        count++;
+                                    }
+                                }
+                                if (count > 8 || count == 0) {
+                                    //restore original state
+                                    Arrays.fill(seleCurrencies, false);
+                                    for (int i : selCurrencyLi) {
+                                        seleCurrencies[i] = true;
+                                    }
+                                    String message;
+                                    if (count == 0) {
+                                        message = "Please select at least one";
+                                    } else {
+                                        message = "Too many selections (more than 8)";
+                                    }
+                                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                                    return;
+                                }
+                                selCurrencyLi.clear();
+                                for (int i = 0; i < seleCurrencies.length; i++) {
+                                    if (seleCurrencies[i]) {
+                                        selCurrencyLi.add(i);
+                                    }
+                                }
                             }
-                        }, year, month, day);
-                //Toast.makeText(MainActivity.this, picker.getDatePicker().findViewById(Resources.getSystem().getIdentifier("day", "id", "android")).toString(), Toast.LENGTH_LONG).show();
-                picker.getDatePicker().setSpinnersShown(true);
-                picker.getDatePicker().setCalendarViewShown(false);
-                picker.show();
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            public void onClick(final DialogInterface dialog, final int id) {
+                                Arrays.fill(seleCurrencies, false);
+                                for (int i : selCurrencyLi) {
+                                    seleCurrencies[i] = true;
+                                }
+                            }
+                        })
+                        .setMultiChoiceItems(R.array.currencies,
+                                seleCurrencies,
+                                new DialogInterface.OnMultiChoiceClickListener() {
+                                    public void onClick(final DialogInterface dialog, final int i,
+                                                        final boolean checked) {
+                                        seleCurrencies[i] = checked;
+                                    }
+                                })
+                        .create()
+                        .show();
             }
         });
+
+        Button selectTime = findViewById(R.id.time);
+        class selTimeListener implements View.OnClickListener, DialogInterface.OnClickListener {
+            private Calendar cld = Calendar.getInstance();
+            private NumberPicker startYear, startMonth;
+            private NumberPicker endYear, endMonth;
+            private int currY, currM, currD;
+
+            public void onClick(View v) {
+                cld.setTimeInMillis(System.currentTimeMillis());
+                currY = cld.get(Calendar.YEAR);
+                currM = cld.get(Calendar.MONTH);
+                currD = cld.get(Calendar.DATE);
+
+                AlertDialog dlg = new AlertDialog
+                        .Builder(MainActivity.this)
+                        .setView(getLayoutInflater().inflate(R.layout.select_date, null))
+                        .setPositiveButton(R.string.select, selTimeListener.this)
+                        .setNegativeButton(R.string.cancel, null)
+                        .create();
+                dlg.show();
+
+                {
+                    startYear = dlg.findViewById(R.id.startYear);
+                    startYear.setWrapSelectorWheel(false);
+                    startYear.setMinValue(1999);
+                    startYear.setMaxValue(currY);
+
+                    endYear = dlg.findViewById(R.id.endYear);
+                    endYear.setWrapSelectorWheel(false);
+                    endYear.setMinValue(1999);
+                    endYear.setMaxValue(currY);
+                }
+
+                {
+                    startMonth = dlg.findViewById(R.id.startMonth);
+                    startMonth.setDisplayedValues(getResources().getStringArray(R.array.months));
+                    startMonth.setMinValue(0);
+
+                    endMonth = dlg.findViewById(R.id.endMonth);
+                    endMonth.setDisplayedValues(getResources().getStringArray(R.array.months));
+                    endMonth.setMinValue(0);
+                }
+
+                {
+                    cld.setTime(start);
+                    startYear.setValue(cld.get(Calendar.YEAR));
+                    if (startYear.getValue() == currY) {
+                        startMonth.setMaxValue(currM);
+                    } else {
+                        startMonth.setMaxValue(11);
+                    }
+                    startMonth.setValue(cld.get(Calendar.MONTH));
+
+                    startYear.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+                        @Override
+                        public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                            if (newVal != currY) {
+                                startMonth.setMaxValue(11);
+                            } else {
+                                startMonth.setMaxValue(currM);
+                            }
+                        }
+                    });
+
+
+                    cld.setTime(end);
+                    endYear.setValue(cld.get(Calendar.YEAR));
+                    if (endYear.getValue() == currY) {
+                        endMonth.setMaxValue(currM);
+                    } else {
+                        endMonth.setMaxValue(11);
+                    }
+                    endMonth.setValue(cld.get(Calendar.MONTH));
+
+                    endYear.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+                        @Override
+                        public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                            if (newVal != currY) {
+                                endMonth.setMaxValue(11);
+                            } else {
+                                endMonth.setMaxValue(currM);
+                            }
+                        }
+                    });
+                }
+            }
+
+            public void onClick(DialogInterface dialog, int which) {
+                if ((startYear.getValue() << 4 | startMonth.getValue()) >=
+                        (endYear.getValue() << 4 | endMonth.getValue())) {
+                    String message;
+                    if (startYear.getValue() == endYear.getValue() &&
+                            startMonth.getValue() == endMonth.getValue()) {
+                        message = "Selected period is too short";
+                    } else {
+                        message = "Start date cannot be later than end date";
+                    }
+                    Toast.makeText(MainActivity.this, message, Toast.LENGTH_LONG).show();
+                    return;
+                }
+                cld.set(startYear.getValue(), startMonth.getValue(), 1);
+                start = cld.getTime();
+
+                cld.set(endYear.getValue(), endMonth.getValue(), 1);
+                cld.set(Calendar.DATE, cld.getActualMaximum(Calendar.DATE));
+                end = cld.getTime();
+            }
+        }
+
+        selectTime.setOnClickListener(new selTimeListener());
 
         Button start = findViewById(R.id.startAPI);
         start.setOnClickListener(new View.OnClickListener() {
@@ -265,7 +349,7 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
     }
 
     /**
-     * TODO: To make MainActivity implement onClickListener. Used for drawing the graph.
+     * To make MainActivity implement onClickListener. Used for drawing the graph.
      */
     @SuppressWarnings("CheckStyle")
     public void onResponse(final JSONObject response) {
@@ -274,8 +358,11 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
         graph.removeAllSeries();
 
         Log.d(TAG, response.toString());
+
+        JSONObject rates = null;
         try {
-            JSONObject rates = response.getJSONObject("rates");
+            rates = response.getJSONObject("rates");
+
             String[] datesArr;
             {
                 Iterator<String> itr = rates.keys();
@@ -288,6 +375,7 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
             Arrays.sort(datesArr);
 
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             Date[] dates = new Date[datesArr.length];
             int[] colors = getResources().getIntArray(R.array.rainbow);
             for (int i = 0; i < datesArr.length; i++) {
@@ -306,22 +394,30 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
                 ser.setColor(colors[i]);
                 graph.addSeries(ser);
             }
+
+
+            // enable scaling and scrolling
+            Viewport vpt = graph.getViewport();
+            vpt.setMinX((double) dates[0].getTime());
+            vpt.setMaxX((double) dates[dates.length - 1].getTime());
+            vpt.setScalable(true);
+            vpt.setScalableY(true);
         } catch (Exception e) {
+            Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
         }
 
-        GridLabelRenderer lblRenderer = graph.getGridLabelRenderer();
         DefaultLabelFormatter dlf = new DefaultLabelFormatter() {
             private SimpleDateFormat large = new SimpleDateFormat("M/yy");
             private SimpleDateFormat small = new SimpleDateFormat("M/d");
             private Calendar mCalendar = Calendar.getInstance();
-            private long twoMonths = 2 * 30 * 24 * 60 * 60 * 1000;
+            private long threeMonths = 3L * 30 * 24 * 60 * 60 * 1000;
 
             public String formatLabel(double value, boolean isValueX) {
                 if (isValueX) {
                     this.mCalendar.setTimeInMillis((long) value);
                     Log.e(TAG, Double.toString(mViewport.getMaxX(false)));
                     if (mViewport.getMaxX(false)
-                            - mViewport.getMinX(false) < twoMonths) {
+                            - mViewport.getMinX(false) < threeMonths) {
                         return small.format(this.mCalendar.getTimeInMillis());
                     } else {
                         return large.format(this.mCalendar.getTimeInMillis());
@@ -332,15 +428,13 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
             }
         };
         dlf.setViewport(graph.getViewport());
+
+        GridLabelRenderer lblRenderer = graph.getGridLabelRenderer();
         lblRenderer.setLabelFormatter(dlf);
         lblRenderer.setVerticalAxisTitle("ExchangeRate");
         lblRenderer.setHorizontalAxisTitle("Time");
         lblRenderer.setNumHorizontalLabels(5);
-
-
-        // enable scaling and scrolling
-        graph.getViewport().setScalable(true);
-        graph.getViewport().setScalableY(true);
+        lblRenderer.setNumVerticalLabels(7);
 
         graph.getLegendRenderer().setVisible(true);
 
@@ -353,19 +447,19 @@ public class MainActivity extends AppCompatActivity implements Response.Listener
      */
     void startAPICall() {
         findViewById(R.id.progressBar).setVisibility(View.VISIBLE);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         StringBuffer sb = new StringBuffer();
         sb.append("?start_at=");
-        sb.append("2017-12-01");
+        sb.append(sdf.format(start));
         sb.append("&end_at=");
-        sb.append("2018-12-01");
+        sb.append(sdf.format(end));
         sb.append("&base=");
         sb.append(currencyArr[selectedBase]);
         sb.append("&symbols=");
-        for (int i = 0; i < seleCurrencies.length; i++) {
-            if (seleCurrencies[i]) {
-                sb.append(currencyArr[i]);
-                sb.append(',');
-            }
+        for (int i : selCurrencyLi) {
+            sb.append(currencyArr[i]);
+            sb.append(',');
         }
         sb.deleteCharAt(sb.length() - 1);
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
